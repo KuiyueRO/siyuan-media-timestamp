@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         思源在线视频时间戳和截图
-// @namespace    http://tampermonkey.net/
+// @namespace    https://github.com/KuiyueRO/siyuan-media-timestamp
 // @version      0.1
-// @description  捕获视频时间戳和当前帧截图、点击跳转
+// @description  捕获视频时间戳和当前帧截图和点击跳转
 // @author       A_Cai
-// @match        https://github.com/KuiyueRO/siyuan-media-timestamp
+// @match        *://*/*
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @connect      127.0.0.1
