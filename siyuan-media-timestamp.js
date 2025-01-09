@@ -29,14 +29,14 @@
         }
         .timestamp-btn {
             padding: 8px 16px;
-            background: #4CAF50;
+            background:rgb(0, 0, 0);
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
         .timestamp-btn:hover {
-            background: #45a049;
+            background:rgb(0, 0, 0);
         }
         .settings-panel {
             position: fixed;
@@ -44,12 +44,12 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-            z-index: 100000;  // 提高z-index
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            z-index: 100000;
             display: none;
-            min-width: 400px;
+            width: 300px;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #333;
             background: #ffffff;
@@ -62,13 +62,16 @@
         }
         .settings-field {
             margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
         .settings-field label {
-            display: block;
-            margin-bottom: 5px;
             color: #333;
             font-size: 14px;
             font-weight: 500;
+            margin-right: 10px;
+            white-space: nowrap;
         }
         .settings-field input, .settings-field select {
             width: 100%;
@@ -165,13 +168,12 @@
             cursor: move;  // 添加移动光标
             user-select: none;  // 防止拖动时选中文本
         }
-        
+
         .timestamp-list-title {
             font-weight: 600;
-            margin-bottom: 10px;
             color: #333;
         }
-        
+
         .timestamp-item {
             padding: 8px;
             margin: 4px 0;
@@ -179,20 +181,70 @@
             border-radius: 4px;
             transition: all 0.2s;
         }
-        
+
         .timestamp-item:hover {
             background: #f0f0f0;
         }
-        
+
         .timestamp-item.active {
             background: #e8f5e9;
-            color: #4CAF50;
+            color:rgb(0, 0, 0);
         }
-        
+
         .no-timestamps {
             color: #999;
             text-align: center;
             padding: 10px;
+        }
+        .timestamp-list-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .timestamp-list-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .timestamp-header-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .timestamp-header-btn {
+            padding: 4px;
+            background: transparent;
+            color: #666;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+        }
+
+        .timestamp-header-btn:hover {
+            background: rgba(0, 0, 0, 0.1);
+            color:rgb(0, 0, 0);
+        }
+
+        .timestamp-header-btn img {
+            width: 16px;
+            height: 16px;
+            filter: invert(0.5);
+        }
+
+        .timestamp-header-btn:hover img {
+            filter: invert(0.7) sepia(1) saturate(3) hue-rotate(100deg);
         }
     `);
 
@@ -208,7 +260,7 @@
             TIMESTAMP_HOTKEY: '',
             SCREENSHOT_HOTKEY: ''
         },
-        
+
         // 获取配置
         get: function() {
             const config = {};
@@ -217,7 +269,7 @@
             }
             return config;
         },
-        
+
         // 保存配置
         save: function(newConfig) {
             for (const [key, value] of Object.entries(newConfig)) {
@@ -259,46 +311,73 @@
         const panel = document.createElement('div');
         panel.className = 'settings-panel';
         const currentConfig = configManager.get();
-        
-        const trustedHTML = trustedTypes.createPolicy('settings-panel', {
-            createHTML: (html) => html
-        });
-        
-        const settingsHTML = trustedHTML.createHTML(`
-            <h3>思源笔记设置</h3>
-            <div class="settings-field">
-                <label>API地址:</label>
-                <input type="text" id="api-endpoint" value="${currentConfig.API_ENDPOINT}" placeholder="http://127.0.0.1:6806">
-            </div>
-            <div class="settings-field">
-                <label>API Token:</label>
-                <input type="text" id="api-token" value="${currentConfig.API_TOKEN}" placeholder="输入你的 API Token">
-            </div>
-            <div class="settings-field">
-                <label>创建笔记快捷键:</label>
-                <input type="text" id="create-note-hotkey" value="${currentConfig.CREATE_NOTE_HOTKEY}" placeholder="点击输入快捷键" readonly>
-            </div>
-            <div class="settings-field">
-                <label>时间戳快捷键:</label>
-                <input type="text" id="timestamp-hotkey" value="${currentConfig.TIMESTAMP_HOTKEY}" placeholder="点击输入快捷键" readonly>
-            </div>
-            <div class="settings-field">
-                <label>截图+时间戳快捷键:</label>
-                <input type="text" id="screenshot-hotkey" value="${currentConfig.SCREENSHOT_HOTKEY}" placeholder="点击输入快捷键" readonly>
-            </div>
-            <div class="settings-field">
-                <label>选择笔记本:</label>
-                <div class="notebook-list" id="notebook-list">
-                    <div class="notebook-item">加载中...</div>
-                </div>
-            </div>
-            <div class="settings-buttons">
-                <button class="settings-btn secondary" id="cancel-settings">取消</button>
-                <button class="settings-btn primary" id="save-settings">保存</button>
-            </div>
-        `);
-        
-        panel.innerHTML = settingsHTML;
+
+        // 使用更安全的DOM操作方法创建设置面板
+        const heading = document.createElement('h3');
+        heading.textContent = '思源笔记设置';
+        panel.appendChild(heading);
+
+        const createField = (labelText, inputId, value, placeholder, type = 'text') => {
+            const field = document.createElement('div');
+            field.className = 'settings-field';
+
+            const label = document.createElement('label');
+            label.textContent = labelText;
+            field.appendChild(label);
+
+            const input = document.createElement('input');
+            input.type = type;
+            input.id = inputId;
+            input.value = value;
+            input.placeholder = placeholder;
+            if (type === 'text' && inputId.includes('hotkey')) {
+                input.readOnly = true;
+            }
+            field.appendChild(input);
+
+            return field;
+        };
+
+        panel.appendChild(createField('API地址:', 'api-endpoint', currentConfig.API_ENDPOINT, 'http://127.0.0.1:6806'));
+        panel.appendChild(createField('API Token:', 'api-token', currentConfig.API_TOKEN, '输入你的 API Token'));
+        panel.appendChild(createField('创建笔记快捷键:', 'create-note-hotkey', currentConfig.CREATE_NOTE_HOTKEY, '点击输入快捷键'));
+        panel.appendChild(createField('时间戳快捷键:', 'timestamp-hotkey', currentConfig.TIMESTAMP_HOTKEY, '点击输入快捷键'));
+        panel.appendChild(createField('截图+时间戳快捷键:', 'screenshot-hotkey', currentConfig.SCREENSHOT_HOTKEY, '点击输入快捷键'));
+
+        // 添加笔记本选择部分
+        const notebookField = document.createElement('div');
+        notebookField.className = 'settings-field';
+        const notebookLabel = document.createElement('label');
+        notebookLabel.textContent = '选择笔记本:';
+        notebookField.appendChild(notebookLabel);
+
+        const notebookList = document.createElement('div');
+        notebookList.className = 'notebook-list';
+        notebookList.id = 'notebook-list';
+        const loadingItem = document.createElement('div');
+        loadingItem.className = 'notebook-item';
+        loadingItem.textContent = '加载中...';
+        notebookList.appendChild(loadingItem);
+        notebookField.appendChild(notebookList);
+        panel.appendChild(notebookField);
+
+        // 添加按钮
+        const buttons = document.createElement('div');
+        buttons.className = 'settings-buttons';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'settings-btn secondary';
+        cancelBtn.id = 'cancel-settings';
+        cancelBtn.textContent = '取消';
+        buttons.appendChild(cancelBtn);
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'settings-btn primary';
+        saveBtn.id = 'save-settings';
+        saveBtn.textContent = '保存';
+        buttons.appendChild(saveBtn);
+
+        panel.appendChild(buttons);
 
         // 添加快捷键设置逻辑
         const hotkeyInputs = ['create-note-hotkey', 'timestamp-hotkey', 'screenshot-hotkey'];
@@ -365,10 +444,10 @@
             const notebooks = await getNotebooks();
             const notebookList = panel.querySelector('#notebook-list');
             const currentConfig = configManager.get();
-            
+
             notebookList.innerHTML = notebooks.map(notebook => `
-                <div class="notebook-item ${notebook.id === currentConfig.NOTEBOOK_ID ? 'selected' : ''}" 
-                     data-id="${notebook.id}" 
+                <div class="notebook-item ${notebook.id === currentConfig.NOTEBOOK_ID ? 'selected' : ''}"
+                     data-id="${notebook.id}"
                      data-name="${notebook.name}">
                     ${notebook.name}
                 </div>
@@ -391,28 +470,6 @@
             `;
         }
     }
-
-    // 创建工具栏
-    const toolsDiv = document.createElement('div');
-    toolsDiv.className = 'timestamp-tools';
-
-    // 创建获取时间戳按钮
-    const timestampBtn = document.createElement('button');
-    timestampBtn.className = 'timestamp-btn';
-    timestampBtn.textContent = '获取时间戳';
-    timestampBtn.onclick = getVideoTimestamp;
-
-    // 创建获取时间戳和截图按钮
-    const screenshotBtn = document.createElement('button');
-    screenshotBtn.className = 'timestamp-btn';
-    screenshotBtn.textContent = '获取时间戳+截图';
-    screenshotBtn.onclick = getVideoScreenshot;
-
-    // 添加按钮到工具栏 (包含设置按钮)
-    toolsDiv.appendChild(settingsBtn);
-    toolsDiv.appendChild(timestampBtn);
-    toolsDiv.appendChild(screenshotBtn);
-    document.body.appendChild(toolsDiv);
 
     // 配置项
     function getConfig() {
@@ -460,11 +517,11 @@
     // 查找匹配的视频笔记
     async function findMatchingVideoNote(mediaUrl) {
         const config = getConfig();
-        const sql = `SELECT block_id FROM attributes WHERE name = 'custom-type' AND value = 'MediaNote' 
+        const sql = `SELECT block_id FROM attributes WHERE name = 'custom-type' AND value = 'MediaNote'
                      AND block_id IN (
                          SELECT block_id FROM attributes WHERE name = 'custom-mediaurl' AND value = '${mediaUrl}'
                      )`;
-                     
+
         return new Promise((resolve, reject) => {
             GM_xmlhttpRequest({
                 method: 'POST',
@@ -501,7 +558,7 @@
 
         const cleanedUrl = cleanUrl(window.location.href);
         const matchingNoteId = await findMatchingVideoNote(cleanedUrl);
-        
+
         if (!matchingNoteId) {
             showNotification('请先创建视频笔记！');
             return;
@@ -518,7 +575,7 @@
         const timestamp = formatTime(currentTime);
         const timeUrl = generateTimeUrl(currentTime);
         const markdownLink = `[${timestamp}](${timeUrl})`;
-        
+
         try {
             await sendToSiYuan(markdownLink);
             showNotification('已发送时间戳到思源笔记');
@@ -571,7 +628,7 @@
 
         const cleanedUrl = cleanUrl(window.location.href);
         const matchingNoteId = await findMatchingVideoNote(cleanedUrl);
-        
+
         if (!matchingNoteId) {
             showNotification('请先创建视频笔记！');
             return;
@@ -588,7 +645,7 @@
         const timestamp = formatTime(currentTime);
         const timeUrl = generateTimeUrl(currentTime);
         const markdownLink = `[${timestamp}](${timeUrl})`;
-        
+
         try {
             // 创建canvas并截图
             const canvas = document.createElement('canvas');
@@ -596,7 +653,7 @@
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
+
             // 将canvas转换为blob
             const blob = await new Promise(resolve => {
                 canvas.toBlob(resolve, 'image/png');
@@ -604,14 +661,14 @@
 
             // 生成文件名
             const fileName = `screenshot-${Date.now()}.png`;
-            
+
             // 上传文件
             const filePath = await uploadFile(blob, fileName);
-            
+
             // 构建markdown内容并发送
             const content = `${markdownLink}\n\n![${timestamp}](${filePath})`;
             await sendToSiYuan(content);
-            
+
             showNotification('已发送时间戳和截图到思源笔记');
         } catch (error) {
             showNotification('发送失败：' + error.message);
@@ -623,7 +680,7 @@
     function generateTimeUrl(seconds) {
         const currentUrl = window.location.href;
         const timeParam = Math.floor(seconds);
-        
+
         if (currentUrl.includes('youtube.com')) {
             const urlObj = new URL(currentUrl);
             const videoId = urlObj.searchParams.get('v');
@@ -647,7 +704,7 @@
         const minutes = Math.floor((seconds % 3600) / 60);
         const secs = Math.floor(seconds % 60);
         const ms = Math.floor((seconds % 1) * 1000);
-        
+
         return `${padZero(hours)}:${padZero(minutes)}:${padZero(secs)}.${padZero(ms, 3)}`;
     }
 
@@ -672,7 +729,7 @@
         toast.className = 'toast-notification';
         toast.textContent = message;
         document.body.appendChild(toast);
-        
+
         setTimeout(() => {
             toast.style.animation = 'slideIn 0.3s ease-out reverse';
             setTimeout(() => toast.remove(), 300);
@@ -701,7 +758,7 @@
         const config = getConfig();
         const cleanedUrl = cleanUrl(window.location.href);
         const title = document.title;
-        
+
         // 创建笔记内容
         const content = `# ${title}\n\n> 视频链接：[${title}](${cleanedUrl})`;
 
@@ -785,12 +842,6 @@
         }
     }
 
-    // 创建新按钮
-    const createNoteBtn = document.createElement('button');
-    createNoteBtn.className = 'timestamp-btn';
-    createNoteBtn.textContent = '创建视频笔记';
-    createNoteBtn.onclick = createVideoNote;
-    
     // 添加更新按钮状态的函数
     async function updateCreateNoteButtonState() {
         if (!document.querySelector('video')) {
@@ -798,11 +849,11 @@
             createNoteBtn.textContent = '未找到视频';
             return;
         }
-        
+
         try {
             const cleanedUrl = cleanUrl(window.location.href);
             const matchingNoteId = await findMatchingVideoNote(cleanedUrl);
-            
+
             if (matchingNoteId) {
                 createNoteBtn.disabled = true;
                 createNoteBtn.textContent = '已存在对应笔记';
@@ -835,13 +886,10 @@
         }
     }).observe(document, {subtree: true, childList: true});
 
-    // 更新工具栏
-    toolsDiv.insertBefore(createNoteBtn, timestampBtn);
-
     // 获取视频笔记中的时间戳
     async function getExistingTimestamps(docId) {
         const config = getConfig();
-        
+
         try {
             // 获取文档块的kramdown源码
             const kramdownData = await new Promise((resolve, reject) => {
@@ -871,7 +919,7 @@
 
             // 使用parseTimestampLinks解析时间戳
             const timestamps = parseTimestampLinks(kramdownData.kramdown);
-            
+
             // 转换格式以保持兼容性
             return timestamps.map(ts => ({
                 text: ts.text,
@@ -891,7 +939,7 @@
         const timestamps = [];
         // 按块分割内容
         const blocks = kramdown.split(/\n\s*\n/);
-        
+
         blocks.forEach(block => {
             // 清理块属性标记
             const cleanBlock = block.replace(/\{:[^\}]+\}/g, '').trim();
@@ -903,7 +951,7 @@
 
             while ((match = regex.exec(cleanBlock)) !== null) {
                 const [fullMatch, text, href] = match;
-                
+
                 // 验证链接格式
                 if (!isValidTimestampLink(href)) continue;
 
@@ -913,7 +961,7 @@
 
                     // 清理和格式化文本
                     const cleanText = cleanTimestampText(text);
-                    
+
                     timestamps.push({
                         text: cleanText,
                         url: normalizeUrl(href),
@@ -936,12 +984,12 @@
             'youtube.com', 'youtu.be',
             'bilibili.com', 'b23.tv'
         ];
-        
+
         try {
             const url = new URL(href);
             const isDomainValid = validDomains.some(domain => url.hostname.includes(domain));
             const hasTimestamp = href.includes('?t=') || href.includes('&t=') || href.includes('#t=');
-            
+
             return isDomainValid && hasTimestamp;
         } catch (e) {
             return false;
@@ -958,14 +1006,14 @@
     function normalizeUrl(url) {
         try {
             const urlObj = new URL(url);
-            
+
             // 处理YouTube链接
             if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
                 const videoId = urlObj.searchParams.get('v') || urlObj.pathname.split('/').pop();
                 const timestamp = extractTime(url);
                 return `https://youtu.be/${videoId}?t=${timestamp}`;
             }
-            
+
             // 处理Bilibili链接
             if (urlObj.hostname.includes('bilibili.com')) {
                 const bvid = url.match(/BV[\w]+/)?.[0];
@@ -974,7 +1022,7 @@
                     return `https://www.bilibili.com/video/${bvid}?t=${timestamp}`;
                 }
             }
-            
+
             return url;
         } catch (e) {
             return url;
@@ -984,13 +1032,13 @@
     function extractTime(url) {
         try {
             const urlObj = new URL(url);
-            
+
             // 尝试从不同位置获取时间参数
             let timeStr = null;
-            
+
             // 检查查询参数
             timeStr = urlObj.searchParams.get('t');
-            
+
             // 检查哈希参数
             if (!timeStr && urlObj.hash) {
                 const hashMatch = urlObj.hash.match(/[?&]t=(\d+)/);
@@ -998,7 +1046,7 @@
                     timeStr = hashMatch[1];
                 }
             }
-            
+
             // 处理时间格式
             if (timeStr) {
                 // 处理 HH:MM:SS 格式
@@ -1012,11 +1060,11 @@
                     }
                     return seconds;
                 }
-                
+
                 // 处理纯数字格式
                 return parseInt(timeStr, 10);
             }
-            
+
             return null;
         } catch (e) {
             console.warn('解析时间戳失败:', e, url);
@@ -1032,9 +1080,9 @@
         const cleanedUrl = cleanUrl(window.location.href);
         const matchingNoteId = await findMatchingVideoNote(cleanedUrl);
         const list = document.getElementById('timestamp-list');
-        
+
         if (!list) return;
-        
+
         if (!matchingNoteId) {
             const noTimestamps = document.createElement('div');
             noTimestamps.className = 'no-timestamps';
@@ -1045,7 +1093,7 @@
 
         try {
             const timestamps = await getExistingTimestamps(matchingNoteId);
-            
+
             if (timestamps.length === 0) {
                 const noTimestamps = document.createElement('div');
                 noTimestamps.className = 'no-timestamps';
@@ -1056,14 +1104,14 @@
 
             // 清空现有列表
             list.replaceChildren();
-            
+
             // 添加新的时间戳项
             timestamps.forEach(ts => {
                 const item = document.createElement('div');
                 item.className = 'timestamp-item';
                 item.dataset.time = ts.time;
                 item.textContent = ts.text;
-                
+
                 item.addEventListener('click', () => {
                     if (video) {
                         video.currentTime = ts.time;
@@ -1071,7 +1119,7 @@
                         item.classList.add('active');
                     }
                 });
-                
+
                 list.appendChild(item);
             });
 
@@ -1082,7 +1130,6 @@
     }
 
     // 在创建工具栏之后添加时间戳列表面板
-    document.body.appendChild(toolsDiv);
     const timestampPanel = createTimestampListPanel(); // 保存对面板的引用
 
     // 初始化
@@ -1144,7 +1191,7 @@
             if (e.target.classList.contains('timestamp-item')) {
                 return; // 如果点击的是时间戳项，不启动拖动
             }
-            
+
             initialX = e.clientX - xOffset;
             initialY = e.clientY - yOffset;
 
@@ -1182,29 +1229,76 @@
         const panel = document.createElement('div');
         panel.className = 'timestamp-list-panel';
 
+        const header = document.createElement('div');
+        header.className = 'timestamp-list-header';
+
         const title = document.createElement('div');
         title.className = 'timestamp-list-title';
         title.textContent = '时间戳列表';
-        
+
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = 'timestamp-header-buttons';
+
+        // 创建四个按钮
+        const buttonConfigs = [
+            {
+                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLXNldHRpbmdzIj48cGF0aCBkPSJNMTIuMjIgMmgtLjQ0YTIgMiAwIDAgMC0yIDJ2LjE4YTIgMiAwIDAgMS0xIDEuNzNsLS40My4yNWEyIDIgMCAwIDEtMiAwbC0uMTUtLjA4YTIgMiAwIDAgMC0yLjczLjczbC0uMjIuMzhhMiAyIDAgMCAwIC43MyAyLjczbC4xNS4xYTIgMiAwIDAgMSAxIDEuNzJ2LjUxYTIgMiAwIDAgMS0xIDEuNzRsLS4xNS4wOWEyIDIgMCAwIDAtLjczIDIuNzNsLjIyLjM4YTIgMiAwIDAgMCAyLjczLjczbC4xNS0uMDhhMiAyIDAgMCAxIDIgMGwuNDMuMjVhMiAyIDAgMCAxIDEgMS43M1YyMGEyIDIgMCAwIDAgMiAyaC40NGEyIDIgMCAwIDAgMi0ydi0uMThhMiAyIDAgMCAxIDEtMS43M2wuNDMtLjI1YTIgMiAwIDAgMSAyIDBsLjE1LjA4YTIgMiAwIDAgMCAyLjczLS43M2wuMjItLjM5YTIgMiAwIDAgMC0uNzMtMi43M2wtLjE1LS4wOGEyIDIgMCAwIDEtMS0xLjc0di0uNWEyIDIgMCAwIDEgMS0xLjc0bC4xNS0uMDlhMiAyIDAgMCAwIC43My0yLjczbC0uMjItLjM4YTIgMiAwIDAgMC0yLjczLS43M2wtLjE1LjA4YTIgMiAwIDAgMS0yIDBsLS40My0uMjVhMiAyIDAgMCAxLTEtMS43M1Y0YTIgMiAwIDAgMC0yLTJ6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iMyIvPjwvc3ZnPg==',
+                title: '设置',
+                onClick: showSettings
+            },
+            {
+                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWZpbGUtcGx1cyI+PHBhdGggZD0iTTE1IDJINmEyIDIgMCAwIDAtMiAydjE2YTIgMiAwIDAgMCAyIDJoMTJhMiAyIDAgMCAwIDItMlY3WiIvPjxwYXRoIGQ9Ik0xNCAydjRhMiAyIDAgMCAwIDIgMmg0Ii8+PHBhdGggZD0iTTkgMTVoNiIvPjxwYXRoIGQ9Ik0xMiAxOHYtNiIvPjwvc3ZnPg==',
+                title: '创建视频笔记',
+                onClick: createVideoNote
+            },
+            {
+                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWdvYWwiPjxwYXRoIGQ9Ik0xMiAxM1YybDggNC04IDQiLz48cGF0aCBkPSJNMjAuNTYxIDEwLjIyMmE5IDkgMCAxIDEtMTIuNTUtNS4yOSIvPjxwYXRoIGQ9Ik04LjAwMiA5Ljk5N2E1IDUgMCAxIDAgOC45IDIuMDIiLz48L3N2Zz4=',
+                title: '获取时间戳',
+                onClick: getVideoTimestamp
+            },
+            {
+                icon: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJsdWNpZGUgbHVjaWRlLWNhbWVyYSI+PHBhdGggZD0iTTE0LjUgNGgtNUw3IDdINGEyIDIgMCAwIDAtMiAydjlhMiAyIDAgMCAwIDIgMmgxNmEyIDIgMCAwIDAgMi0yVjlhMiAyIDAgMCAwLTItMmgtM2wtMi41LTN6Ii8+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMyIgcj0iMyIvPjwvc3ZnPg==',
+                title: '获取时间戳+截图',
+                onClick: getVideoScreenshot
+            }
+        ];
+
+        buttonConfigs.forEach(config => {
+            const button = document.createElement('button');
+            button.className = 'timestamp-header-btn';
+            button.title = config.title;
+            button.onclick = config.onClick;
+
+            const img = document.createElement('img');
+            img.src = config.icon;
+            img.alt = config.title;
+
+            button.appendChild(img);
+            buttonsContainer.appendChild(button);
+        });
+
+        header.appendChild(title);
+        header.appendChild(buttonsContainer);
+
         const list = document.createElement('div');
         list.id = 'timestamp-list';
-        
-        panel.appendChild(title);
+
+        panel.appendChild(header);
         panel.appendChild(list);
-        
+
         document.body.appendChild(panel);
         makeDraggable(panel);
-        
+
         return panel;
     }
 
     // 添加快捷键设置函数
     function setupHotkeys() {
         const config = configManager.get();
-        
+
         // 移除现有的事件监听器
         document.removeEventListener('keydown', hotkeyHandler);
-        
+
         // 添加新的事件监听器
         document.addEventListener('keydown', hotkeyHandler);
 
